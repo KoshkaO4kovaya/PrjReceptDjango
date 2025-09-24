@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Регистрация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-6 text-center">Регистрация</h1>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="mb-4">
+                <label for="{{ form.email.id_for_label }}" class="block text-gray-700">Email</label>
+                {{ form.email|add_class:"w-full mt-1 p-2 border rounded" }}
+                {{ form.email.errors }}
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.name.id_for_label }}" class="block text-gray-700">Имя пользователя</label>
+                {{ form.name|add_class:"w-full mt-1 p-2 border rounded" }}
+                {{ form.name.errors }}
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.phone_num.id_for_label }}" class="block text-gray-700">Телефон</label>
+                {{ form.phone_num|add_class:"w-full mt-1 p-2 border rounded" }}
+                {{ form.phone_num.errors }}
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.password1.id_for_label }}" class="block text-gray-700">Пароль</label>
+                {{ form.password1|add_class:"w-full mt-1 p-2 border rounded" }}
+                {{ form.password1.errors }}
+            </div>
+
+            <div class="mb-6">
+                <label for="{{ form.password2.id_for_label }}" class="block text-gray-700">Подтверждение пароля</label>
+                {{ form.password2|add_class:"w-full mt-1 p-2 border rounded" }}
+                {{ form.password2.errors }}
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Зарегистрироваться</button>
+        </form>
+    </div>
+</body>
+</html>
