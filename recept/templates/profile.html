@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="max-w-md mx-auto p-6 bg-white rounded shadow-md">
+  <h1 class="text-2xl mb-6 font-semibold">Профиль пользователя</h1>
+  {% if user.avatar %}
+    <img src="{{ user.avatar.url }}" alt="Аватарка" class="w-24 h-24 rounded-full mb-4">
+  {% endif %}
+  <p><strong>ФИО:</strong> {{ user.full_name }}</p>
+  <p><strong>Почта:</strong> {{ user.email }}</p>
+  <p><strong>Телефон:</strong> {{ user.phone_num }}</p>
+  <p><strong>Дата рождения:</strong> {{ user.birth_date }}</p>
+  <a href="{% url 'profile_edit' %}" class="text-blue-600 underline mt-4 block">Редактировать профиль</a>
+</section>
+{% endblock %}

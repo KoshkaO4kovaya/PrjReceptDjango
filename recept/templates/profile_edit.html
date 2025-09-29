@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="max-w-md mx-auto p-6 bg-white rounded shadow-md">
+  <h1 class="text-2xl mb-6 font-semibold">Редактировать профиль</h1>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+  </form>
+</section>
+{% endblock %}
