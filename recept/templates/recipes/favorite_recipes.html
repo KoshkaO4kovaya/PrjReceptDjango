@@ -1,0 +1,54 @@
+{% extends "base.html" %} 
+{% load static %} 
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 border-b-2 border-primary-orange-500 pb-2">
+        <i class="fas fa-heart text-primary-orange-500 mr-3"></i> Избранные рецепты
+    </h1>
+
+    {% if recipes %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {% for recipe in recipes %}
+                <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden">
+                    <a href="{% url 'recipe_detail' recipe.pk %}">
+                        {% if recipe.cover_image %}
+                            <img src="{{ recipe.cover_image.url }}" alt="{{ recipe.title }}" class="w-full h-48 object-cover">
+                        {% else %}
+                            <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                                <i class="fas fa-image fa-3x"></i>
+                            </div>
+                        {% endif %}
+                    </a>
+                    <div class="p-5">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 truncate">
+                            <a href="{% url 'recipe_detail' recipe.pk %}" class="hover:text-primary-orange-600 transition">{{ recipe.title }}</a>
+                        </h2>
+                        <p class="text-sm text-gray-600 line-clamp-2 mb-3">{{ recipe.description|truncatechars:100 }}</p>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span class="flex items-center">
+                                <i class="fas fa-user-circle mr-1"></i> {{ recipe.user.full_name|default:'Автор' }}
+                            </span>
+                            <span class="flex items-center text-primary-orange-500 font-semibold">
+                                <i class="fas fa-star mr-1"></i> ({{ recipe.average_rating|default:0 }})
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white p-10 rounded-xl shadow-lg text-center">
+            <p class="text-2xl text-gray-700 mb-4">У вас пока нет избранных рецептов. 🙁</p>
+            <p class="text-gray-500 mb-6">Нажмите на сердечко ❤️ рядом с понравившимся рецептом, чтобы добавить его сюда.</p>
+            <a 
+                href="{% url 'recipe_list' %}" 
+                class="px-6 py-3 text-white bg-primary-orange-500 rounded-full font-semibold shadow-md hover:bg-primary-orange-600 transition duration-300 transform hover:scale-105"
+            >
+                Перейти к рецептам
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}

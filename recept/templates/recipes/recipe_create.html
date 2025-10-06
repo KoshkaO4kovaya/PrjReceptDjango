@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+<section class="max-w-3xl mx-auto p-6 bg-white rounded shadow-md">
+  <h1 class="text-2xl mb-6 font-semibold">Создать рецепт</h1>
+  
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="p-3 rounded {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+
+    {{ form.status_field }}
+    
+    <div>
+      <label for="{{ form.title.id_for_label }}" class="block mb-1 font-medium text-gray-700">Название</label>
+      {{ form.title|add_class:"w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-500" }}
+      {% for error in form.title.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div>
+      <label for="{{ form.cover_image.id_for_label }}" class="block mb-1 font-medium text-gray-700">Обложка</label>
+      {{ form.cover_image|add_class:"w-full p-2 border rounded" }}
+      {% for error in form.cover_image.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div>
+      <label for="{{ form.description.id_for_label }}" class="block mb-1 font-medium text-gray-700">Описание</label>
+      {{ form.description|add_class:"w-full p-2 border rounded" }}
+      {% for error in form.description.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+    </div>
+
+    <h2 class="mt-6 mb-4 text-xl font-semibold flex items-center justify-between">
+      Ингредиенты
+      <button type="button" id="add-ingredient" class="text-green-600 hover:text-green-800" title="Добавить ингредиент">
+        <i class="fa-solid fa-circle-plus fa-lg"></i>
+      </button>
+    </h2>
+    {{ ingredient_formset.management_form }}
+    <div id="ingredients-container" class="space-y-4">
+      {% for ingr_form in ingredient_formset %}
+        <div class="p-3 border rounded bg-gray-50 relative ingredient-form-group">
+          <button type="button" class="remove-ingredient absolute top-2 right-2 text-red-600 hover:text-red-800" title="Удалить ингредиент">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+          
+          <div>
+            {{ ingr_form.ingredient_name.label_tag }}
+            {{ ingr_form.ingredient_name|add_class:"w-full p-2 border rounded" }}
+            {% for error in ingr_form.ingredient_name.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="flex space-x-2 mt-2">
+            <div class="flex-1">
+              {{ ingr_form.quantity.label_tag }}
+              {{ ingr_form.quantity|add_class:"w-full p-2 border rounded" }}
+              {% for error in ingr_form.quantity.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="flex-1">
+              {{ ingr_form.unit.label_tag }}
+              {{ ingr_form.unit|add_class:"w-full p-2 border rounded" }}
+              {% for error in ingr_form.unit.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+            </div>
+          </div>
+          {{ ingr_form.DELETE }}
+        </div>
+      {% endfor %}
+    </div>
+
+    <h2 class="mt-6 mb-4 text-xl font-semibold flex items-center justify-between">
+      Этапы готовки (Необязательно)
+      <button type="button" id="add-step" class="text-green-600 hover:text-green-800" title="Добавить шаг">
+        <i class="fa-solid fa-circle-plus fa-lg"></i>
+      </button>
+    </h2>
+    {{ formset.management_form }}
+    <div id="formset-container" class="space-y-4">
+      {% for step_form in formset %}
+        <div class="p-4 border rounded bg-gray-50 relative step-form-group">
+          <button type="button" class="remove-step absolute top-2 right-2 text-red-600 hover:text-red-800" title="Удалить шаг">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+          <div>
+            <label for="{{ step_form.order.id_for_label }}" class="block mb-1">Порядок</label>
+            {{ step_form.order|add_class:"w-full p-2 border rounded" }}
+            {% for error in step_form.order.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ step_form.description.id_for_label }}" class="block mb-1">Описание</label>
+            {{ step_form.description|add_class:"w-full p-2 border rounded" }}
+            {% for error in step_form.description.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ step_form.image.id_for_label }}" class="block mb-1">Картинка</label>
+            {{ step_form.image|add_class:"w-full p-2 border rounded" }}
+            {% for error in step_form.image.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+          </div>
+          {{ step_form.DELETE }}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="{{ form.portions.id_for_label }}" class="block mb-1 font-medium text-gray-700">Порций</label>
+        {{ form.portions|add_class:"w-full p-2 border rounded" }}
+        {% for error in form.portions.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+      </div>
+      
+      <div>
+        <label for="{{ form.calories.id_for_label }}" class="block mb-1 font-medium text-gray-700">Калорийность (на порцию)</label>
+        {{ form.calories|add_class:"w-full p-2 border rounded" }}
+        {% for error in form.calories.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    
+    <div>
+      <label for="{{ form.estimated_cost.id_for_label }}" class="block mb-1 font-medium text-gray-700">Примерная стоимость</label>
+      {{ form.estimated_cost|add_class:"w-full p-2 border rounded" }}
+      {% for error in form.estimated_cost.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div>
+      <label class="block mb-1 font-medium text-gray-700">Жанры</label>
+      {{ form.genres }}
+      {% for error in form.genres.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div>
+      <label for="{{ form.video_file.id_for_label }}" class="block mb-1 font-medium text-gray-700">Видео рецепт (файл)</label>
+      {{ form.video_file|add_class:"w-full p-2 border rounded" }}
+      {% for error in form.video_file.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div class="flex space-x-4 pt-4">
+        <button type="submit" name="submit_status" value="draft" 
+                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded text-lg font-semibold transition duration-200">
+            Сохранить черновик
+        </button>
+        <button type="submit" name="submit_status" value="published" 
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded text-lg font-semibold transition duration-200">
+            Опубликовать рецепт
+        </button>
+    </div>
+  </form>
+
+  <div id="empty-ingredient-form" class="hidden">
+    <div class="p-3 border rounded bg-gray-100 relative ingredient-form-group">
+      <button type="button" class="remove-ingredient absolute top-2 right-2 text-red-600 hover:text-red-800" title="Удалить ингредиент">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      
+      <div>
+        <label for="id_ingr-__prefix__-ingredient_name" class="block mb-1 font-medium text-gray-700">Название ингредиента</label>
+        <input type="text" name="ingr-__prefix__-ingredient_name" id="id_ingr-__prefix__-ingredient_name" maxlength="100" class="w-full p-2 border rounded">
+      </div>
+      <div class="flex space-x-2 mt-2">
+        <div class="flex-1">
+          <label for="id_ingr-__prefix__-quantity" class="block mb-1 font-medium text-gray-700">Количество</label>
+          <input type="number" step="0.01" name="ingr-__prefix__-quantity" id="id_ingr-__prefix__-quantity" class="w-full p-2 border rounded">
+        </div>
+        <div class="flex-1">
+          <label for="id_ingr-__prefix__-unit" class="block mb-1 font-medium text-gray-700">Единица измерения</label>
+          <select name="ingr-__prefix__-unit" id="id_ingr-__prefix__-unit" class="w-full p-2 border rounded">
+            {% for choice_value, choice_label in ingredient_formset.empty_form.unit.field.choices %}
+              <option value="{{ choice_value }}">{{ choice_label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <input type="checkbox" name="ingr-__prefix__-DELETE" id="id_ingr-__prefix__-DELETE">
+    </div>
+  </div>
+
+
+  <div id="empty-step-form" class="hidden">
+    <div class="p-4 border rounded bg-gray-100 relative step-form-group">
+      <button type="button" class="remove-step absolute top-2 right-2 text-red-600 hover:text-red-800" title="Удалить шаг">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      
+      <div>
+        <label for="id_form-__prefix__-order" class="block mb-1">Порядок</label>
+        <input type="number" name="form-__prefix__-order" id="id_form-__prefix__-order" class="w-full p-2 border rounded">
+      </div>
+
+      <div>
+        <label for="id_form-__prefix__-description" class="block mb-1">Описание</label>
+        <textarea name="form-__prefix__-description" id="id_form-__prefix__-description" class="w-full p-2 border rounded" rows="2"></textarea>
+      </div>
+
+      <div>
+        <label for="id_form-__prefix__-image" class="block mb-1">Картинка</label>
+        <input type="file" name="form-__prefix__-image" id="id_form-__prefix__-image" class="w-full p-2 border rounded">
+      </div>
+
+      <input type="checkbox" name="form-__prefix__-DELETE" id="id_form-__prefix__-DELETE">
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // ===================================================================
+  // Динамическое управление ИНГРЕДИЕНТАМИ
+  // ===================================================================
+  const addIngredientBtn = document.getElementById('add-ingredient');
+  const ingredientsContainer = document.getElementById('ingredients-container');
+  const totalIngredientForms = document.querySelector('#id_ingr-TOTAL_FORMS');
+  const emptyIngredientForm = document.getElementById('empty-ingredient-form').innerHTML;
+
+  addIngredientBtn.addEventListener('click', () => {
+    let formCount = parseInt(totalIngredientForms.value);
+    // Заменяем __prefix__ на текущий счетчик
+    let newFormHtml = emptyIngredientForm.replace(/__prefix__/g, formCount); 
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = newFormHtml;
+    
+    // Добавляем новый элемент и увеличиваем счетчик
+    ingredientsContainer.appendChild(tempDiv.firstElementChild);
+    totalIngredientForms.value = formCount + 1;
+  });
+
+  // Обработчик удаления ингредиента (для динамически добавленных и существующих форм)
+  ingredientsContainer.addEventListener('click', function(e) {
+    // Ищем кнопку удаления внутри формы ингредиента
+    if (e.target.closest('.remove-ingredient')) {
+      // Находим ближайший div-родитель формы ингредиента
+      const ingredientDiv = e.target.closest('div.ingredient-form-group');
+      
+      // Находим чекбокс DELETE внутри этого div
+      const deleteCheckbox = ingredientDiv.querySelector('input[type=checkbox][id$="-DELETE"]');
+      
+      if (deleteCheckbox) {
+        // Устанавливаем чекбокс и скрываем форму
+        deleteCheckbox.checked = true;
+        ingredientDiv.style.display = 'none';
+        // Если это новая (несохраненная) форма, можно просто удалить элемент DOM
+        if (!ingredientDiv.classList.contains('has-initial-data')) {
+            // Если вы не используете has-initial-data класс, то просто скрывать - безопасно.
+        }
+      }
+    }
+  });
+
+
+  // ===================================================================
+  // Динамическое управление ЭТАПАМИ ГОТОВКИ
+  // ===================================================================
+  const addStepBtn = document.getElementById('add-step');
+  const stepsContainer = document.getElementById('formset-container');
+  const totalStepForms = document.querySelector('#id_form-TOTAL_FORMS');
+  const emptyStepForm = document.getElementById('empty-step-form').innerHTML;
+
+  addStepBtn.addEventListener('click', () => {
+    let formCount = parseInt(totalStepForms.value);
+    let newFormHtml = emptyStepForm.replace(/__prefix__/g, formCount);
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = newFormHtml;
+    
+    stepsContainer.appendChild(tempDiv.firstElementChild);
+    totalStepForms.value = formCount + 1;
+  });
+
+  stepsContainer.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-step')) {
+      const stepDiv = e.target.closest('div.step-form-group');
+      const deleteCheckbox = stepDiv.querySelector('input[type=checkbox][id$="-DELETE"]');
+      
+      if (deleteCheckbox) {
+        deleteCheckbox.checked = true;
+        stepDiv.style.display = 'none';
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

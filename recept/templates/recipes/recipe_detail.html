@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<section class="max-w-4xl mx-auto p-4 md:p-8 bg-gray-50 rounded-xl shadow-2xl mt-8 mb-12 animate-fadeIn">
+    
+    <div class="relative mb-6 ">  
+             <h1 class="text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
+            {{ recipe.title }}
+
+
+
+        </h1>
+        
+        <div class="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+            <span class="flex items-center">
+                {% if recipe.user.avatar %}
+                    <img src="{{ recipe.user.avatar.url }}" alt="Аватар" class="h-6 w-6 rounded-full object-cover mr-2">
+                {% endif %}
+                Автор: 
+                <a href="{% url 'user_profile' recipe.user.id %}" class="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1 transition duration-150">
+                    {{ recipe.user.full_name|default:recipe.user.email }}
+                </a>
+            </span>
+            <span class="text-xs px-2 py-0.5 rounded-full 
+                {% if recipe.status == 'published' %}bg-green-100 text-green-700{% else %}bg-orange-100 text-orange-700{% endif %}">
+                {{ recipe.get_status_display }}
+            </span>
+
+                        {% if user.is_authenticated %}
+    <button id="favorite-toggle-btn" 
+            data-recipe-id="{{ recipe.pk }}"
+            class="p-2 rounded-full transition duration-300 {% if is_favorited %}text-red-500 hover:text-red-700 bg-red-100{% else %}text-gray-400 hover:text-red-500 hover:bg-red-50{% endif %}">
+    
+        <i id="heart-icon" 
+            class="fa-xl transition duration-300 
+                    {% if is_favorited %}fas fa-heart{% else %}far fa-heart{% endif %}" 
+            aria-hidden="true">
+        </i>
+    </button>
+    {% endif %}
+        </div>
+
+        {% if recipe.cover_image %}
+            <div class="overflow-hidden rounded-lg shadow-xl animate-fade-in-up">
+                <img src="{{ recipe.cover_image.url }}" alt="Обложка рецепта" class="w-full h-80 object-cover transform hover:scale-105 transition duration-500 ease-in-out">
+            </div>
+        {% endif %}
+
+        
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+        
+        <div class="lg:col-span-2 p-4 bg-white rounded-lg shadow border border-gray-100">
+            <h2 class="text-2xl font-bold text-gray-800 border-b pb-2 mb-4">Описание рецепта</h2>
+            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ recipe.description }}</p>
+
+            {% if recipe.video_file %}
+            <div class="mt-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Видеоинструкция</h3>
+                <video controls class="w-full rounded-lg shadow-md border" poster="{% if recipe.cover_image %}{{ recipe.cover_image.url }}{% endif %}">
+                    <source src="{{ recipe.video_file.url }}" type="video/mp4">
+                    Ваш браузер не поддерживает видео.
+                </video>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="lg:col-span-1 space-y-4">
+            <div class="p-4 bg-white rounded-lg shadow border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-3">Краткая информация</h2>
+                
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex justify-between items-center border-b pb-2">
+                        <span class="font-medium flex items-center"><svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.214-.015-.426-.043-.637C16.892 16.592 16.712 16 16.277 16H10a4 4 0 00-4 4v2m4-2h10"></path></svg> Порций:</span>
+                        <span class="font-semibold text-gray-800">{{ recipe.portions|default:"Не указано" }}</span>
+                    </li>
+                    <li class="flex justify-between items-center border-b pb-2">
+                        <span class="font-medium flex items-center"><svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Калории (на порцию):</span>
+                        <span class="font-semibold text-gray-800">{{ recipe.calories|default:"Не указано" }} ккал</span>
+                    </li>
+                    <li class="flex justify-between items-center">
+                        <span class="font-medium flex items-center"><svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.072 0-3.953.945-5 2.5a6.002 6.002 0 00-5.965 7.425C1.642 19.336 2.87 20 4 20h16c1.13 0 2.358-.664 2.965-1.075A6.002 6.002 0 0017 8h-5z"></path></svg> Цена (оценка):</span>
+                        <span class="font-semibold text-gray-800">
+                            {% if recipe.estimated_cost %}
+                                {{ recipe.estimated_cost }} ₽
+                            {% else %}
+                                Не указано
+                            {% endif %}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+            
+            {% if recipe.genres.all %}
+            <div class="p-4 bg-white rounded-lg shadow border border-gray-100">
+                <h3 class="text-xl font-bold text-gray-800 mb-3">Категории</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for genre in recipe.genres.all %}
+                        <span class="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full transition duration-150 hover:bg-blue-200">
+                            #{{ genre.name }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+    </div>
+
+    ---
+    
+    {% if ingredients %}
+    <div class="mt-10 p-4 md:p-6 bg-white rounded-lg shadow-xl">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+            <svg class="w-7 h-7 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.003 2.003-2.003 2.003m-2-2h4m-2 4l2.003 2.003-2.003 2.003m-2-2h4m-9 0h4m-2 2v4m-2 2h4"></path></svg>
+            Ингредиенты
+        </h2>
+        
+        <ul class="list-none space-y-2">
+            {% for ingredient in ingredients %}
+            <li class="flex justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-green-50 rounded transition duration-150 animate-fade-in-right">
+                <span class="text-gray-700 font-medium">{{ ingredient.ingredient.name }}</span>
+                <span class="text-gray-800 font-semibold">
+                    {% if ingredient.quantity %}{{ ingredient.quantity|floatformat:2 }}{% endif %}
+                    {{ ingredient.get_unit_display }}
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    ---
+
+    {% if steps %}
+    <div class="mt-10 p-4 md:p-6 bg-white rounded-lg shadow-xl">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 flex items-center">
+            <svg class="w-7 h-7 mr-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Приготовление
+        </h2>
+        
+        <ol class="space-y-10">
+            {% for step in steps %}
+            <li class="flex flex-col md:flex-row items-start space-x-0 md:space-x-6 p-4 border border-gray-200 rounded-xl bg-orange-50/50 hover:shadow-lg transition duration-300">
+                <div class="flex-shrink-0 mb-4 md:mb-0">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-orange-500 text-white text-xl font-bold shadow-md">
+                        {{ step.order }}
+                    </div>
+                </div>
+                
+                <div class="flex-grow">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Шаг {{ step.order }}</h3>
+                    <p class="text-gray-700 leading-relaxed">{{ step.description }}</p>
+
+                    {% if step.image %}
+                        <div class="mt-4 overflow-hidden rounded-lg shadow-md max-w-sm">
+                            <img src="{{ step.image.url }}" alt="Изображение шага {{ step.order }}" class="w-full h-auto object-cover transition duration-300 transform hover:scale-105">
+                        </div>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+    {% endif %}
+
+    <style>
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out 0.2s backwards;
+        }
+        .animate-fade-in-right {
+            animation: fadeInRight 0.3s ease-out both;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('favorite-toggle-btn');
+    const heartIcon = document.getElementById('heart-icon');
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', async () => {
+            const recipeId = toggleBtn.getAttribute('data-recipe-id');
+            const url = `{% url 'toggle_favorite' 0 %}`.replace('0', recipeId); // Заменяем заглушку 0 на ID
+
+            // Получаем CSRF токен
+            const getCookie = (name) => {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        let cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({}) // Отправляем пустой JSON
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Обновляем иконку и стили
+                    if (data.is_favorited) {
+                        heartIcon.classList.remove('far', 'text-gray-400', 'hover:text-red-500', 'hover:bg-red-50');
+                        heartIcon.classList.add('fas', 'text-red-500');
+                        toggleBtn.classList.add('text-red-500', 'hover:text-red-700', 'bg-red-100');
+                        toggleBtn.classList.remove('text-gray-400', 'hover:text-red-500', 'hover:bg-red-50');
+                    } else {
+                        heartIcon.classList.remove('fas', 'text-red-500');
+                        heartIcon.classList.add('far', 'text-gray-400');
+                        toggleBtn.classList.remove('text-red-500', 'hover:text-red-700', 'bg-red-100');
+                        toggleBtn.classList.add('text-gray-400', 'hover:text-red-500', 'hover:bg-red-50');
+                    }
+                    
+                    console.log(data.message);
+                    // alert(data.message); 
+
+                } else {
+                    console.error('Ошибка при переключении избранного:', response.statusText);
+                    alert('Ошибка: не удалось обновить избранное.');
+                }
+            } catch (error) {
+                console.error('Сетевая ошибка:', error);
+                alert('Произошла сетевая ошибка.');
+            }
+        });
+    }
+});
+</script>
+</section>
+{% endblock %}

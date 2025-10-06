@@ -1,42 +1,98 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
 {% load widget_tweaks %}
+
 {% block content %}
 <section class="max-w-md mx-auto p-6 bg-white rounded shadow-md">
   <h1 class="text-2xl mb-6 font-semibold">Регистрация</h1>
-  <form method="post" novalidate>
+
+  <form method="POST" novalidate>
     {% csrf_token %}
-    {{ form.non_field_errors }}
+
+    {# Показываем общие ошибки формы #}
+    {% if form.non_field_errors %}
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+    
+    {# Показываем сообщения от messages framework #}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
     <div class="mb-4">
-      <label class="block mb-1" for="{{ form.full_name.id_for_label }}">Имя пользователя</label>
-      {{ form.full_name|add_class:"w-full px-3 py-2 border rounded" }}
-      {{ form.full_name.errors }}
+      <label class="block mb-1" for="{{ form.full_name.id_for_label }}">ФИО</label>
+      {{ form.full_name|add_class:"w-full px-3 py-2 border rounded" }} 
+      <div class="text-red-500 text-sm mt-1">{{ form.full_name.errors }}</div>
     </div>
+
     <div class="mb-4">
       <label class="block mb-1" for="{{ form.phone_num.id_for_label }}">Номер телефона</label>
-      {{ form.phone_num|add_class:"w-full px-3 py-2 border rounded" }}
-      {{ form.phone_num.errors }}
+      {{ form.phone_num|add_class:"w-full px-3 py-2 border rounded" }} 
+      <div class="text-red-500 text-sm mt-1">{{ form.phone_num.errors }}</div>
     </div>
+
     <div class="mb-4">
       <label class="block mb-1" for="{{ form.birth_date.id_for_label }}">Дата рождения</label>
-      {{ form.birth_date|add_class:"w-full px-3 py-2 border rounded" }}
-      {{ form.birth_date.errors }}
+      {{ form.birth_date|add_class:"w-full px-3 py-2 border rounded" }} 
+      <div class="text-red-500 text-sm mt-1">{{ form.birth_date.errors }}</div>
     </div>
+
     <div class="mb-4">
       <label class="block mb-1" for="{{ form.email.id_for_label }}">Почта</label>
-      {{ form.email|add_class:"w-full px-3 py-2 border rounded" }}
-      {{ form.email.errors }}
+      {{ form.email|add_class:"w-full px-3 py-2 border rounded" }} 
+      <div class="text-red-500 text-sm mt-1">{{ form.email.errors }}</div>
     </div>
-    <div class="mb-4">
+
+    <div class="mb-4 relative">
       <label class="block mb-1" for="{{ form.password1.id_for_label }}">Пароль</label>
-      {{ form.password1|add_class:"w-full px-3 py-2 border rounded" }}
-      {{ form.password1.errors }}
+      
+      {# Добавляем pr-10 (padding-right), чтобы текст не заезжал под иконку #}
+      {{ form.password1|add_class:"w-full px-3 py-2 border rounded pr-10" }}
+      
+      {# Возвращаем кнопку-глазик #}
+      <button
+        type="button"
+        onclick="togglePassword('{{ form.password1.id_for_label }}', this)"
+        tabindex="-1"
+        aria-label="Показать/скрыть пароль"
+        class="absolute right-3 top-9 text-gray-600 focus:outline-none"
+      >
+        <i class="fa fa-eye"></i>
+      </button>
+
+      <div class="text-red-500 text-sm mt-1">{{ form.password1.errors }}</div>
     </div>
     <div class="mb-6">
       <label class="block mb-1" for="{{ form.password2.id_for_label }}">Подтвердить пароль</label>
-      {{ form.password2|add_class:"w-full px-3 py-2 border rounded" }}
-      {{ form.password2.errors }}
+      {{ form.password2|add_class:"w-full px-3 py-2 border rounded" }} 
+      <div class="text-red-500 text-sm mt-1">{{ form.password2.errors }}</div>
     </div>
-    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded">Зарегистрироваться</button>
+
+    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded">
+      Зарегистрироваться
+    </button>
   </form>
 </section>
+
+<script>
+  function togglePassword(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = "password";
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+</script>
+
 {% endblock %}

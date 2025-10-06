@@ -1,12 +1,73 @@
 {% extends 'base.html' %}
-
+{% load widget_tweaks %}
 {% block content %}
-<section class="max-w-md mx-auto p-6 bg-white rounded shadow-md">
-  <h1 class="text-2xl mb-6 font-semibold">Редактировать профиль</h1>
-  <form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-  </form>
+
+<section class="max-w-xl mx-auto">
+    <div class="p-8 bg-white rounded-xl shadow-2xl border-t-4 border-primary-orange-500">
+        
+        <h1 class="text-3xl mb-6 font-bold text-gray-800">
+            Настройка профиля <i class="fas fa-cog text-primary-orange-500 ml-1"></i>
+        </h1>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="border p-4 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold mb-3 text-gray-700">Ваш аватар</h3>
+                
+                <div class="flex items-center space-x-6">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="Текущий аватар" 
+                             class="w-24 h-24 rounded-full object-cover border-4 border-primary-orange-500 shadow">
+                        
+                        <button type="submit" name="remove_avatar" value="true" 
+                                class="flex items-center text-red-600 hover:text-red-800 font-medium transition duration-150">
+                            <i class="fas fa-trash-alt mr-2"></i> Удалить текущий
+                        </button>
+                    {% else %}
+                        <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-3xl">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-4">
+    <label for="{{ form.avatar.id_for_label }}" class="block text-gray-700 font-medium mb-1">Загрузить новый аватар</label>
+
+    {{ form.avatar|attr:"class:block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-orange-100 file:text-primary-orange-700 hover:file:bg-primary-orange-200 transition" }}
+
+    {% for error in form.avatar.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+    {% endfor %}
+</div>
+            </div>
+
+            {% for field in form %}
+                {% if field.name != 'avatar' %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="block text-gray-700 font-medium mb-1">
+                            {{ field.label }}
+                        </label>
+                        {{ field|add_class:"w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-orange-500 transition duration-150"|attr:"placeholder:Заполните поле" }}
+                        {% for error in field.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            
+            <button type="submit" 
+                    class="w-full bg-primary-orange-500 text-white py-3 rounded-full font-bold text-lg 
+                           hover:bg-primary-orange-600 transition duration-300 transform hover:scale-[1.01] shadow-lg">
+                <i class="fas fa-save mr-2"></i> Сохранить изменения
+            </button>
+            
+        </form>
+
+        <a href="{% url 'profile' %}" class="inline-block mt-6 text-gray-600 hover:text-primary-orange-600 font-medium transition">
+            <i class="fas fa-arrow-left mr-1"></i> Назад к профилю
+        </a>
+    </div>
 </section>
+
 {% endblock %}

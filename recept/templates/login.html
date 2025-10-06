@@ -3,20 +3,43 @@
 {% block content %}
 <section class="max-w-md mx-auto p-6 bg-white rounded shadow-md">
   <h1 class="text-2xl mb-6 font-semibold">Вход</h1>
-  <form method="post" novalidate>
+  <form method="POST" novalidate>
     {% csrf_token %}
     {{ form.non_field_errors }}
+
     <div class="mb-4">
       <label class="block mb-1" for="{{ form.username.id_for_label }}">Почта или номер телефона</label>
       {{ form.username|add_class:"w-full px-3 py-2 border rounded" }}
       {{ form.username.errors }}
     </div>
-    <div class="mb-6">
+
+    <div class="mb-6 relative">
       <label class="block mb-1" for="{{ form.password.id_for_label }}">Пароль</label>
-      {{ form.password|add_class:"w-full px-3 py-2 border rounded" }}
+      {{ form.password|add_class:"w-full px-3 py-2 border rounded pr-10" }}
+      <button type="button" tabindex="-1" aria-label="Показать / скрыть пароль"
+              class="absolute right-3 top-9 text-gray-600 focus:outline-none"
+              onclick="togglePasswordVisibility('id_password', this)">
+        <i class="fa-solid fa-eye"></i>
+      </button>
       {{ form.password.errors }}
     </div>
+
     <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded">Войти</button>
   </form>
 </section>
+<script>
+  function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = "password";
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+</script>
 {% endblock %}
