@@ -18,8 +18,15 @@ urlpatterns = [
     path('users/<int:user_id>/', views.user_profile_view, name='user_profile'),
     path('favorite/toggle/<int:recipe_id>/', views.toggle_favorite, name='toggle_favorite'), 
     path('recipes/', views.recipe_list_view, name='recipe_list'), 
-     path('favorites/', views.favorite_recipes_view, name='favorite_recipes'),
-    ]
+    path('favorites/', views.favorite_recipes_view, name='favorite_recipes'),
+    path('admin-profile/', views.admin_profile_view, name='admin_profile'),
+    path('admin-users/', views.admin_users_list_view, name='admin_users_list'),
+    path('admin-recipes/', views.admin_recipes_list_view, name='admin_recipes_list'),
+    path('recipes/<int:pk>/edit-genres/', views.admin_edit_recipe_genres, name='admin_edit_recipe_genres'),
+    path('admin/genres/add/', views.admin_add_genre, name='admin_add_genre'),
+
+
+]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

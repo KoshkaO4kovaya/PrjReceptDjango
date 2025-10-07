@@ -1,21 +1,20 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import UserRegistrationForm, UserLoginForm, UserProfileForm, RecipeForm, RecipeStepFormSet, RecipeIngredientForm, RecipeStepForm
 from .models import User, RecipeIngredient, RecipeStep, ListIngredient, Recipe, Genre, Favorite 
 from django.shortcuts import get_object_or_404
-from django.forms import formset_factory, modelformset_factory 
+from django.forms import formset_factory, modelformset_factory
+from django import forms
 from django.contrib import messages
 from django.db.models import Count, Q, Prefetch
-from django.http import JsonResponse, HttpResponseBadRequest 
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
 
 
-
-
-def index(request): 
+def index(request):
     return render(request, 'index.html')
 
-from django.contrib import messages
 
 
 def signup_view(request):
@@ -46,7 +45,6 @@ def login_view(request):
             password = form.cleaned_data.get('password')
             user = None
             try:
-                # сначала по email
                 user_obj = User.objects.get(email=email_or_phone)
                 user = authenticate(request, email=user_obj.email, password=password)
             except User.DoesNotExist:
@@ -80,7 +78,7 @@ def profile_view(request):
 def admin_profile_view(request):
     if not request.user.is_superuser:
         return redirect('profile')
-    return render(request, 'admin_profile.html')
+    return render(request, 'admin/admin_profile.html')
 
 def logout_view(request):
     logout(request)
@@ -282,13 +280,13 @@ def recipe_detail_view(request, pk):
 
 def user_profile_view(request, user_id):
     user_to_show = get_object_or_404(User, pk=user_id)
-    
-
+    user_recipes = user_to_show.recipes.filter(status='published').order_by('-created_at')
     context = {
-        'user_to_show': user_to_show,
-        # 'recipes': user_recipes,
+        'profile_user': user_to_show,
+        'recipes': user_recipes,
     }
-    return render(request, 'user_profile.html', context)
+    return render(request, 'users/profile.html', context)
+
 
 
 def recipe_list_view(request):
@@ -389,3 +387,83 @@ def favorite_recipes_view(request):
     }
     return render(request, 'recipes/favorite_recipes.html', context)
 
+
+# админка:
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_profile_view(request):
+    total_users = User.objects.count()
+    total_published_recipes = Recipe.objects.filter(status='published').count()
+
+    context = {
+        'total_users': total_users,
+        'total_published_recipes': total_published_recipes,
+    }
+    return render(request, 'admin/admin_profile.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_users_list_view(request):
+    users = User.objects.all().order_by('email')
+    context = {'users': users}
+    return render(request, 'admin/users_list.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_recipes_list_view(request):
+    recipes = Recipe.objects.select_related('user').prefetch_related('genres').order_by('-created_at')
+    context = {'recipes': recipes}
+    return render(request, 'admin/recipes_list.html', context)
+
+
+
+class RecipeGenreForm(forms.ModelForm):
+    class Meta:
+        model = Recipe
+        fields = ['genres']
+        widgets = {
+            'genres': forms.CheckboxSelectMultiple(),
+        }
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_edit_recipe_genres(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk)
+    if request.method == 'POST':
+        form = RecipeGenreForm(request.POST, instance=recipe)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Жанры успешно обновлены.')
+            return redirect('admin_recipes_list')
+    else:
+        form = RecipeGenreForm(instance=recipe)
+
+    context = {'form': form, 'recipe': recipe}
+    return render(request, 'admin/edit_recipe_genres.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def admin_add_genre(request):
+    name = request.POST.get('name', '').strip()
+    error = None
+    if name:
+        exists = Genre.objects.filter(name__iexact=name).exists()
+        if exists:
+            error = "Жанр с таким названием уже существует."
+        else:
+            Genre.objects.create(name=name)
+            messages.success(request, f'Жанр "{name}" успешно добавлен.')
+    else:
+        error = "Название жанра не может быть пустым."
+    recipe_pk = request.GET.get('recipe_pk') or request.POST.get('recipe_pk')
+
+    if not recipe_pk:
+        return redirect('admin_profile')
+
+    recipe = get_object_or_404(Recipe, pk=recipe_pk)
+    form = RecipeGenreForm(instance=recipe)
+    context = {'form': form, 'recipe': recipe, 'genre_error': error}
+    return render(request, 'admin/edit_recipe_genres.html', context)
