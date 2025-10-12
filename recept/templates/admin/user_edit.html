@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <header class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-900">
+            Редактировать <span class="text-primary-orange-500">{{ profile_user.email }}</span>
+        </h1>
+        <p class="mt-2 text-md text-gray-500">ID: #{{ profile_user.pk }}</p>
+    </header>
+
+    <div class="bg-white p-8 rounded-2xl shadow-2xl border-t-8 border-primary-orange-500">
+        
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+                
+                {% if field.name == 'avatar' and profile_user.avatar %}
+                    <p class="mt-2">Текущий аватар:</p>
+                    <img src="{{ profile_user.avatar.url }}" class="w-20 h-20 object-cover rounded-full border border-gray-200">
+                    <button type="submit" name="remove_avatar" class="mt-2 text-sm text-red-500 hover:underline">
+                        Удалить текущий аватар
+                    </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="pt-4 flex justify-between items-center">
+                <a href="{% url 'admin_users_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Отмена
+                </a>
+                <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-lg font-bold rounded-md shadow-sm text-white bg-primary-orange-600 hover:bg-primary-orange-700 transition">
+                    <i class="fas fa-save mr-2"></i> Сохранить изменения
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<style>
+/* Дополнительные стили для полей формы */
+.form-group input:not([type="checkbox"]), .form-group select, .form-group textarea {
+    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-orange-500 focus:ring-primary-orange-500 sm:text-sm;
+}
+.form-group input[type="file"] {
+    @apply p-1.5;
+}
+/* Стили для чекбоксов */
+.form-group input[type="checkbox"] {
+    @apply h-4 w-4 text-primary-orange-600 border-gray-300 rounded focus:ring-primary-orange-500;
+}
+.form-group label {
+    @apply font-semibold;
+}
+</style>
+
+{% endblock %}

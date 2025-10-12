@@ -1,0 +1,17 @@
+Администратор:
+admin@mail.ru
+Пароль:
+admin
+
+Чтобы скачать venv:
+py -m venv .venv
+
+Активация на Windows:
+.\.venv\Scripts\Activate.ps1
+
+Скачать все дополнения:
+pip install -r requirements.txt
+
+*requirements - текстовый файл где хранятся дополнения
+
+Если не работает - самостоятельно скачайте все дополнения

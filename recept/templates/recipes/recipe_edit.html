@@ -202,18 +202,24 @@
                 </button>
                 
             </div>
-            
-            <div class="pt-6 border-t border-gray-200 mt-8 flex justify-end space-x-4 sticky bottom-0 bg-white p-4 -mx-6 -mb-6 rounded-b-xl shadow-inner">
-                <button type="submit" name="submit_status" value="draft" class="flex items-center bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg transition duration-150 ease-in-out shadow-md">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4v4m-2-2h4m-7 0h.01"></path></svg>
-                    Сохранить как черновик
-                </button>
-                <button type="submit" name="submit_status" value="published" class="flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-lg transition duration-150 ease-in-out shadow-lg hover:shadow-xl">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 10.5h-3m3 0a3 3 0 11-6 0h6zm0 0a3 3 0 10-6 0h6zM15.172 17.51a1.234 1.234 0 001.656 0c.38-.372.634-.842.634-1.35 0-1.55-1.25-2.8-2.8-2.8h-2.128c-.482 0-.94.202-1.272.56l-3.23 3.518a1.2 1.2 0 00.916 2.072h10.928a1.2 1.2 0 00.916-2.072l-3.23-3.518z"></path></svg>
-                    Опубликовать рецепт
-                </button>
-            </div>
-        </form>
+         <input type="hidden" name="submit_status" id="submit_status_input" value="{% if recipe %}{{ recipe.status }}{% else %}draft{% endif %}">
+    
+    <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+        
+        <button type="submit" 
+                onclick="document.getElementById('submit_status_input').value='draft'" 
+                class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition duration-150">
+            <i class="fas fa-save mr-2"></i> Сохранить черновик
+        </button>
+        
+        <button type="submit" 
+                onclick="document.getElementById('submit_status_input').value='pending'" 
+                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-150 shadow-lg shadow-green-200/50">
+            <i class="fas fa-upload mr-2"></i> Отправить на модерацию
+        </button>
+    </div>
+
+</form>
         
     </div>
 </section>

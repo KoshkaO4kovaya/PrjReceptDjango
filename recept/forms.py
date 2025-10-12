@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User
+from .models import User, Review
 from django.forms import modelformset_factory, formset_factory, FileInput 
 from .models import Recipe, RecipeStep, RecipeIngredient, ListIngredient, Genre
 import re
@@ -50,7 +50,7 @@ class RegistrationForm(UserCreationForm):
             raise forms.ValidationError('Пользователь с таким Email уже существует.')
         return email
 
-
+# рецепты
 class RecipeForm(forms.ModelForm):
     
     status_field = forms.ChoiceField(
@@ -74,23 +74,49 @@ class RecipeForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         
-        status = self.data.get('status_field') 
+        status = self.data.get('status_field', 'draft') 
 
-        if status == 'published':
-            # Проверка обязательных полей для публикации
-            if not cleaned_data.get('title'):
-                self.add_error('title', 'Название обязательно для публикации.')
-            if not cleaned_data.get('description'):
-                self.add_error('description', 'Описание обязательно для публикации.')
-            # Поля с PositiveIntegerField/DecimalField могут быть пустыми, если null=True, 
-            # но мы делаем их обязательными для публикации
-            if not cleaned_data.get('portions'):
-                 self.add_error('portions', 'Количество порций обязательно для публикации.')
-            if not cleaned_data.get('calories'):
-                 self.add_error('calories', 'Калорийность обязательна для публикации.')
-            if not cleaned_data.get('genres') or len(cleaned_data.get('genres')) == 0:
+        # Валидация для публикации 
+        if status == 'pending':
+            
+            required_fields = {
+                'title': 'Название',
+                'description': 'Описание',
+                'portions': 'Количество порций',
+                'calories': 'Калорийность',
+                'estimated_cost': 'Примерная стоимость',
+            }
+            
+            for field, label in required_fields.items():
+                if not cleaned_data.get(field):
+                    self.add_error(field, f'{label} обязательно для публикации.')
+            
+            has_cover = cleaned_data.get('cover_image') or (self.instance and self.instance.cover_image)
+            if not has_cover:
+                self.add_error('cover_image', 'Обложка обязательна для публикации.')
+
+            if not cleaned_data.get('genres'):
                 self.add_error('genres', 'Выберите хотя бы один жанр для публикации.')
-        
+
+                
+
+        elif status == 'draft' or status == 'rejected':
+            
+            simple_fields = ['title', 'description']
+            
+            has_simple_field_data = any(cleaned_data.get(f) for f in simple_fields)
+
+            if not has_simple_field_data:
+                has_file_data = bool(self.files.get('cover_image') or self.files.get('video_file'))
+                if self.instance:
+                    has_file_data = has_file_data or bool(self.instance.cover_image or self.instance.video_file)
+                
+                has_m2m_data = bool(cleaned_data.get('genres'))
+
+                if not (has_simple_field_data or has_file_data or has_m2m_data):
+                     if not cleaned_data.get('title'):
+
+                        self.add_error(None, 'Для сохранения в черновик заполните хотя бы Название, чтобы рецепт не был пустым.')
         
         return cleaned_data
 
@@ -98,18 +124,18 @@ class RecipeForm(forms.ModelForm):
 
         recipe = super().save(commit=False)
         
-        status = self.cleaned_data.get('status_field', 'draft')
+        status = self.data.get('status_field', 'draft') 
 
-        if not status:
-             status = self.data.get('status_field', 'draft')
-             
+        if status == 'pending' and recipe.moderation_notes:
+            recipe.moderation_notes = None
+
         recipe.status = status
         
         if commit:
             recipe.save()
-            self.save_m2m() # Сохраняем ManyToMany связи (жанры)
+            self.save_m2m() 
         return recipe
-
+    
 
 class RecipeStepForm(forms.ModelForm):
     class Meta:
@@ -132,3 +158,42 @@ class RecipeIngredientForm(forms.Form):
         ('kg', 'Килограммы'),
         ('cup', 'Кружка'),
     ], label='Единица измерения')
+
+# админка
+class AdminUserEditForm(forms.ModelForm):
+
+    class Meta:
+        model = User
+        fields = ['email', 'full_name', 'phone_num', 'birth_date', 'avatar', 'is_active', 'is_staff', 'is_superuser']
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'email': 'Email',
+            'full_name': 'Полное имя',
+            'phone_num': 'Номер телефона',
+            'birth_date': 'Дата рождения',
+            'avatar': 'Аватар',
+            'is_active': 'Активен (Может войти)',
+            'is_staff': 'Персонал (Доступ к админке Django)',
+            'is_superuser': 'Суперпользователь (Полный доступ)',
+        }
+
+# отзывы
+
+class ReviewForm(forms.ModelForm):
+    rating = forms.IntegerField(
+        min_value=1,
+        max_value=5,
+        widget=forms.HiddenInput()
+    )
+
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Поделитесь своим мнением о рецепте...'})
+        }
+        labels = {
+            'comment': 'Комментарий',
+        }

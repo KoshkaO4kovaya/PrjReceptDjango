@@ -1,24 +1,98 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Все пользователи</h2>
-<table class="table-auto w-full border-collapse border border-gray-200">
-    <thead>
-        <tr>
-            <th class="border border-gray-300 px-4 py-2">Email</th>
-            <th class="border border-gray-300 px-4 py-2">ФИО</th>
-            <th class="border border-gray-300 px-4 py-2">Дата регистрации</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr>
-            <td class="border border-gray-300 px-4 py-2">{{ user.email }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ user.full_name }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ user.date_joined|date:"d.m.Y" }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="3">Пользователей нет</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+
+<div class="max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    
+    <header class="flex justify-between items-center mb-8 border-b pb-4">
+        <h1 class="text-3xl font-extrabold text-gray-900">
+            <i class="fas fa-users text-primary-orange-500 mr-3"></i> Все пользователи
+        </h1>
+        <a href="{% url 'admin_profile' %}" class="text-primary-orange-600 hover:underline font-medium">
+            ← Назад к панели
+        </a>
+    </header>
+
+    <div class="bg-white shadow-2xl rounded-xl overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-primary-orange-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Email
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        ФИО
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Дата регистрации
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Статус
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Действия
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for user in users %}
+                <tr class="hover:bg-gray-50 transition duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ user.email }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {{ user.full_name|default:"Не указано" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ user.date_joined|date:"d.m.Y" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if user.is_superuser %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                Админ
+                            </span>
+                        {% elif user.is_staff %}
+                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                Персонал
+                            </span>
+                        {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Обычный
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <a href="{% url 'admin_user_detail' user.pk %}" class="text-blue-600 hover:text-blue-900 transition duration-150" title="Просмотр">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        
+                        <a href="{% url 'admin_user_edit' user.pk %}" class="text-primary-orange-600 hover:text-primary-orange-900 transition duration-150" title="Редактировать">
+                            <i class="fas fa-user-edit"></i>
+                        </a>
+                        
+                        {% if user != request.user %}
+                        <button type="button" 
+                                onclick="document.getElementById('delete-{{ user.pk }}').submit()"
+                                class="text-red-600 hover:text-red-900 transition duration-150 ml-2" title="Удалить">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <form id="delete-{{ user.pk }}" method="POST" action="{% url 'admin_user_delete' user.pk %}" style="display:none;">
+                            {% csrf_token %}
+                        </form>
+                        {% else %}
+                        <span class="text-gray-400 cursor-not-allowed ml-2" title="Нельзя удалить себя"><i class="fas fa-ban"></i></span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500 italic">
+                        На данный момент нет зарегистрированных пользователей.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {% endblock %}

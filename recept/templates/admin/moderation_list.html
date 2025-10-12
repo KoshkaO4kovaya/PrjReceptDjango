@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    
+    <header class="mb-10 border-b border-gray-200 pb-5">
+        <h1 class="text-4xl font-extrabold text-gray-900">
+            <i class="fas fa-hammer text-yellow-500 mr-3"></i> Модерация рецептов
+        </h1>
+        <p class="mt-2 text-xl text-gray-600">
+            Рецепты, ожидающие вашего одобрения ({{ recipes.count }}).
+        </p>
+    </header>
+
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="p-3 rounded {% if message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-green-100 text-green-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if recipes %}
+    <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Название
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Автор
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Дата отправки
+                    </th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Действия
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for recipe in recipes %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900 hover:text-blue-600 transition">
+                            <a href="{% url 'recipe_detail' recipe.pk %}" target="_blank">
+                                {{ recipe.title }}
+                            </a>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            {% for genre in recipe.genres.all %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {{ genre.name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">
+                            <a href="{% url 'admin_user_detail' recipe.user.pk %}" class="text-blue-600 hover:text-blue-800">
+                                {{ recipe.user.full_name|default:recipe.user.email }}
+                            </a>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ recipe.created_at|date:"d M Y в H:i" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <div class="flex items-center justify-center space-x-3">
+                            
+                      <form method="POST" action="{% url 'admin_approve_recipe' recipe.pk %}" class="inline-block" onsubmit="return confirm('Вы уверены, что хотите опубликовать рецепт «{{ recipe.title }}»?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition duration-150" title="Одобрить и опубликовать">
+                                    <i class="fas fa-check-circle mr-1"></i> Одобрить
+                                </button>
+                            </form>
+                            
+                            <form method="POST" action="{% url 'admin_reject_recipe' recipe.pk %}" class="inline-block reject-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="moderation_notes" class="moderation-notes-input" value="">
+                                <button type="submit" class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition duration-150 reject-btn" title="Отклонить и вернуть в черновики">
+                                    <i class="fas fa-times-circle mr-1"></i> Отклонить
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12 bg-white rounded-xl shadow-lg border-2 border-dashed border-gray-300">
+        <i class="fas fa-mug-hot text-6xl text-gray-400 mb-4"></i>
+        <p class="text-2xl text-gray-600 font-semibold">Список модерации пуст!</p>
+        <p class="text-gray-500 mt-2">Все рецепты были проверены. Хорошая работа!</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    document.querySelectorAll('.reject-form').forEach(form => {
+        form.querySelector('.reject-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Получаем название рецепта (для более информативного prompt)
+            const recipeTitle = this.closest('tr').querySelector('a').innerText.trim();
+            
+            // Запрашиваем причину отклонения
+            const notes = prompt(`Укажите причину отклонения рецепта «${recipeTitle}»:\n(Это сообщение будет видно пользователю)`);
+
+            if (notes === null) {
+                // Пользователь нажал "Отмена"
+                return;
+            }
+
+            // Устанавливаем полученные примечания в скрытое поле
+            const input = form.querySelector('.moderation-notes-input');
+            input.value = notes.trim() || 'Причина не указана.'; 
+            
+            // Отправляем форму
+            form.submit();
+        });
+    });
+</script>
+
+{% endblock %}

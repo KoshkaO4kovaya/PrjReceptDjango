@@ -62,21 +62,29 @@ class Recipe(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Черновик'),
         ('published', 'Опубликован'),
+        ('pending', 'На модерации'),
+        ('rejected', 'Отклонен'),
+
     ]
      
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft', help_text='Статус рецепта: черновик или опубликован')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft', help_text='Статус рецепта')
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipes')
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True, null=True) 
     cover_image = models.ImageField(upload_to='recipe_images/', blank=True, null=True, help_text='Обложка рецепта')
-    description = models.TextField()
-    portions = models.PositiveIntegerField(default=1)
-    calories = models.PositiveIntegerField(help_text='Калорийность на порцию')
+    description = models.TextField(blank=True, null=True) 
+    portions = models.PositiveIntegerField(default=1, blank=True, null=True) 
+    calories = models.PositiveIntegerField(help_text='Калорийность на порцию', blank=True, null=True) 
     estimated_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    genres = models.ManyToManyField(Genre, related_name='recipes', blank=True)  
+    genres = models.ManyToManyField(Genre, related_name='recipes', blank=True) 
     ingredients = models.ManyToManyField(ListIngredient, through='RecipeIngredient', related_name='recipes')
     video_file = models.FileField(upload_to='recipe_videos/', blank=True, null=True, help_text='Видео рецепт (файл)')
     is_public = models.BooleanField(default=True)
+    moderation_notes = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text='Комментарии администратора при отклонении'
+        )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

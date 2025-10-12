@@ -4,14 +4,18 @@
 <section class="max-w-4xl mx-auto p-4 md:p-8 bg-gray-50 rounded-xl shadow-2xl mt-8 mb-12 animate-fadeIn">
     
     <div class="relative mb-6 ">  
-             <h1 class="text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
-            {{ recipe.title }}
+     <div class='flex justify-between'>
+ <h1 class="text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
+             {{ recipe.title }}</h1>
+        <a href="{% url 'recipe_reviews' recipe.pk %}" class="ml-4 text-2xl text-primary-orange-600 hover:text-primary-orange-800 transition duration-150 font-semibold flex items-center mt-2">
+            <i class="fas fa-comments text-xl mr-2"></i> Отзывы ({{ recipe.reviews.count }})
+        </a>
 
+     </div>
+            
 
-
-        </h1>
-        
         <div class="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+            
             <span class="flex items-center">
                 {% if recipe.user.avatar %}
                     <img src="{{ recipe.user.avatar.url }}" alt="Аватар" class="h-6 w-6 rounded-full object-cover mr-2">
@@ -21,10 +25,15 @@
                     {{ recipe.user.full_name|default:recipe.user.email }}
                 </a>
             </span>
+            
             <span class="text-xs px-2 py-0.5 rounded-full 
-                {% if recipe.status == 'published' %}bg-green-100 text-green-700{% else %}bg-orange-100 text-orange-700{% endif %}">
-                {{ recipe.get_status_display }}
+                {% if recipe.status == 'draft' %}bg-gray-200 text-gray-700
+                {% elif recipe.status == 'pending' %}bg-blue-100 text-blue-700
+                {% elif recipe.status == 'rejected' %}bg-red-100 text-red-700
+                {% else %}bg-green-100 text-green-700{% endif %}">
+                Статус: {{ recipe.get_status_display }}
             </span>
+            
 
                         {% if user.is_authenticated %}
     <button id="favorite-toggle-btn" 
@@ -37,15 +46,34 @@
             aria-hidden="true">
         </i>
     </button>
+    
     {% endif %}
         </div>
-
-        {% if recipe.cover_image %}
-            <div class="overflow-hidden rounded-lg shadow-xl animate-fade-in-up">
-                <img src="{{ recipe.cover_image.url }}" alt="Обложка рецепта" class="w-full h-80 object-cover transform hover:scale-105 transition duration-500 ease-in-out">
+        {% if recipe.status == 'rejected' and recipe.moderation_notes %}
+            {% if is_owner or is_admin %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-md">
+                <p class="font-semibold text-red-700">Рецепт Отклонен</p>
+                <p class="text-red-600 text-sm">Причина: {{ recipe.moderation_notes }}</p>
+                <p class="text-red-600 text-sm mt-1">Отредактируйте и отправьте на повторную модерацию.</p>
             </div>
+            {% endif %}
+        {% endif %}
+        {% if recipe.status == 'pending' %}
+            {% if is_owner or is_admin %}
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded-md">
+                <p class="font-semibold text-blue-700">На модерации</p>
+                <p class="text-blue-600 text-sm">Дождитесь решения администратора. Вы не можете редактировать рецепт, пока он находится на рассмотрении.</p>
+            </div>
+            {% endif %}
         {% endif %}
 
+        <div class="overflow-hidden rounded-lg shadow-xl animate-fade-in-up">
+            {% if recipe.cover_image %}
+                <img src="{{ recipe.cover_image.url }}" alt="Обложка рецепта" class="w-full h-80 object-cover transform hover:scale-105 transition duration-500 ease-in-out">
+            {% else %}
+                <img src="{% static 'images/default_recipe_cover.jpg' %}" alt="Обложка рецепта (нет)" class="w-full h-80 object-cover">
+            {% endif %}
+        </div>
         
     </div>
 
@@ -107,9 +135,6 @@
         </div>
         
     </div>
-
-    ---
-    
     {% if ingredients %}
     <div class="mt-10 p-4 md:p-6 bg-white rounded-lg shadow-xl">
         <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
@@ -131,7 +156,7 @@
     </div>
     {% endif %}
 
-    ---
+
 
     {% if steps %}
     <div class="mt-10 p-4 md:p-6 bg-white rounded-lg shadow-xl">
@@ -259,4 +284,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </section>
-{% endblock %}
+{% endblock content%}

@@ -1,34 +1,87 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Все рецепты</h2>
-<table class="table-auto w-full border-collapse border border-gray-200">
-    <thead>
-        <tr>
-            <th class="border border-gray-300 px-4 py-2">Название</th>
-            <th class="border border-gray-300 px-4 py-2">Автор</th>
-            <th class="border border-gray-300 px-4 py-2">Статус</th>
-            <th class="border border-gray-300 px-4 py-2">Дата создания</th>
-            <th class="border border-gray-300 px-4 py-2">Жанры</th>
-            <th class="border border-gray-300 px-4 py-2">Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for recipe in recipes %}
-        <tr>
-            <td class="border border-gray-300 px-4 py-2">{{ recipe.title }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ recipe.user.email }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ recipe.get_status_display }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ recipe.created_at|date:"d.m.Y" }}</td>
-            <td class="border border-gray-300 px-4 py-2">
-                {{ recipe.genres.all|join:", " }}
-            </td>
-            <td class="border border-gray-300 px-4 py-2">
-                <a href="{% url 'admin_edit_recipe_genres' recipe.id %}" class="text-blue-600 hover:underline">Добавить жанры</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="6">Рецептов нет</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+
+<div class="max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    
+    <header class="flex justify-between items-center mb-8 border-b pb-4">
+        <h1 class="text-3xl font-extrabold text-gray-900">
+            <i class="fas fa-utensils text-primary-orange-500 mr-3"></i> Все рецепты
+        </h1>
+        <a href="{% url 'admin_profile' %}" class="text-primary-orange-600 hover:underline font-medium">
+            ← Назад к панели
+        </a>
+    </header>
+
+    <div class="bg-white shadow-2xl rounded-xl overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-primary-orange-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Название
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Автор
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Статус
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Дата
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Жанры
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-primary-orange-800 uppercase tracking-wider">
+                        Действия
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for recipe in recipes %}
+                <tr class="hover:bg-gray-50 transition duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ recipe.title }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ recipe.user.email }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if recipe.status == 'published' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Опубликован
+                            </span>
+                        {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Черновик
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ recipe.created_at|date:"d.m.Y" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 max-w-xs truncate">
+                        {% for genre in recipe.genres.all %}
+                            <span class="inline-block bg-primary-orange-100 text-primary-orange-700 text-xs font-medium mr-1 mb-1 px-2.5 py-0.5 rounded-full">{{ genre.name }}</span>
+                        {% empty %}
+                            <span class="text-gray-400 italic">Нет жанров</span>
+                        {% endfor %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{% url 'admin_edit_recipe_genres' recipe.id %}" class="text-primary-orange-600 hover:text-primary-orange-900 transition duration-150">
+                            <i class="fas fa-edit mr-1"></i> Жанры
+                        </a>
+                        </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500 italic">
+                        На данный момент нет зарегистрированных рецептов.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {% endblock %}

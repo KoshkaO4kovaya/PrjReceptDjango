@@ -138,18 +138,23 @@
       {% for error in form.video_file.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
     </div>
 
-    <div class="flex space-x-4 pt-4">
-        <button type="submit" name="submit_status" value="draft" 
-                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded text-lg font-semibold transition duration-200">
-            Сохранить черновик
+<input type="hidden" name="submit_status" id="submit_status_input" value="{% if recipe %}{{ recipe.status }}{% else %}draft{% endif %}">
+    
+    <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+        
+        <button type="submit" 
+                onclick="document.getElementById('submit_status_input').value='draft'" 
+                class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition duration-150">
+            <i class="fas fa-save mr-2"></i> Сохранить черновик
         </button>
-        <button type="submit" name="submit_status" value="published" 
-                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded text-lg font-semibold transition duration-200">
-            Опубликовать рецепт
+        
+        <button type="submit" 
+                onclick="document.getElementById('submit_status_input').value='pending'" 
+                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-150 shadow-lg shadow-green-200/50">
+            <i class="fas fa-upload mr-2"></i> Отправить на модерацию
         </button>
     </div>
-  </form>
-
+</form>
   <div id="empty-ingredient-form" class="hidden">
     <div class="p-3 border rounded bg-gray-100 relative ingredient-form-group">
       <button type="button" class="remove-ingredient absolute top-2 right-2 text-red-600 hover:text-red-800" title="Удалить ингредиент">

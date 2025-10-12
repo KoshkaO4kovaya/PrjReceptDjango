@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+<section class="max-w-4xl mx-auto p-4 md:p-8 bg-gray-50 rounded-xl shadow-2xl mt-8 mb-12 animate-fadeIn">
+    
+    <div class="mb-8 border-b pb-4">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
+            Отзывы о рецепте: <span class="text-primary-orange-600">{{ recipe.title }}</span>
+        </h1>
+        <a href="{% url 'recipe_detail' recipe.pk %}" class="text-blue-600 hover:underline flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Вернуться к рецепту
+        </a>
+    </div>
+
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg text-white font-medium mb-3 
+                    {% if message.tags == 'error' %}bg-red-500{% elif message.tags == 'success' %}bg-green-500{% else %}bg-blue-500{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="mb-10 p-6 bg-white rounded-xl shadow-md border border-gray-200">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Оставьте свой отзыв</h2>
+        
+        {% if not user.is_authenticated %}
+            <p class="text-lg text-gray-600">
+                Пожалуйста, <a href="{% url 'login' %}" class="text-primary-orange-600 hover:underline font-medium">войдите</a>, чтобы оставить отзыв.
+            </p>
+        {% elif is_author %}
+            <div class="p-4 bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-300">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Вы являетесь автором этого рецепта и не можете оставлять на него отзыв.
+            </div>
+        {% else %}
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                <div class="rating-stars mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Ваша оценка:</label>
+                    <div class="flex items-center text-3xl">
+                        {% for i in "12345" %}
+                            {% with forloop.counter as star_value %}
+                                <i class="far fa-star text-gray-300 cursor-pointer star" 
+                                   data-value="{{ star_value }}" 
+                                   id="star-{{ star_value }}"></i>
+                            {% endwith %}
+                        {% endfor %}
+                        {{ form.rating }}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.comment.id_for_label }}" class="block mb-1 font-medium text-gray-700">Комментарий</label>
+                    {{ form.comment|add_class:"w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-orange-500 transition duration-150" }}
+                    {% for error in form.comment.errors %}<p class="text-red-500 text-sm mt-1">{{ error }}</p>{% endfor %}
+                </div>
+
+                <button type="submit" class="w-full py-3 px-4 bg-primary-orange-500 text-white font-semibold rounded-lg hover:bg-primary-orange-600 transition duration-150 shadow-lg">
+                    {% if user_has_reviewed %}Обновить отзыв{% else %}Отправить отзыв{% endif %}
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="reviews-list">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 border-b pb-2">Все отзывы ({{ reviews.count }})</h2>
+        
+        {% if not reviews %}
+            <div class="p-6 text-center bg-white rounded-xl border border-dashed border-gray-300">
+                <p class="text-lg text-gray-600">Отзывов пока нет. Будьте первым! 😊</p>
+            </div>
+        {% endif %}
+
+        <div class="space-y-6">
+            {% for review in reviews %}
+                <div class="review-item p-5 bg-white rounded-xl shadow border border-gray-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center">
+                            {% if review.user.avatar %}
+                                <img src="{{ review.user.avatar.url }}" alt="Аватар" class="h-8 w-8 rounded-full object-cover mr-3">
+                            {% else %}
+                                <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <p class="font-bold text-gray-800">
+                                {{ review.user.full_name|default:review.user.email }} 
+                                {% if review.user == recipe.user %}
+                                    <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Автор</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="flex items-center text-xl text-yellow-500">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star text-gray-300"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-700 mb-3">{{ review.comment }}</p>
+                    
+                    <span class="text-sm text-gray-500">{{ review.created_at|date:"d M Y в H:i" }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.rating-stars .star');
+    const ratingInput = document.querySelector('#id_rating');
+    let currentRating = parseInt(ratingInput.value) || 0;
+
+    // Функция для обновления вида звезд
+    function updateStars(rating) {
+        stars.forEach(star => {
+            const starValue = parseInt(star.dataset.value);
+            if (starValue <= rating) {
+                star.classList.remove('far', 'text-gray-300');
+                star.classList.add('fas', 'text-yellow-500');
+            } else {
+                star.classList.remove('fas', 'text-yellow-500');
+                star.classList.add('far', 'text-gray-300');
+            }
+        });
+    }
+
+    // Инициализация звезд на основе текущего значения
+    updateStars(currentRating);
+
+    // Обработчики событий
+    stars.forEach(star => {
+        // Наведение мыши
+        star.addEventListener('mouseover', function() {
+            if (ratingInput.closest('form')) { // Проверка, что форма активна
+                updateStars(parseInt(this.dataset.value));
+            }
+        });
+
+        // Уход мыши
+        star.addEventListener('mouseout', function() {
+            if (ratingInput.closest('form')) {
+                updateStars(currentRating);
+            }
+        });
+
+        // Клик (выбор оценки)
+        star.addEventListener('click', function() {
+            if (ratingInput.closest('form')) {
+                currentRating = parseInt(this.dataset.value);
+                ratingInput.value = currentRating;
+                updateStars(currentRating); // Обновить вид звезд
+            }
+        });
+    });
+});
+</script>
+
+{% endblock content%}
