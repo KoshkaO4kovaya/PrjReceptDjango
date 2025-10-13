@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<section class="max-w-4xl mx-auto">
+    <div class="p-8 bg-white rounded-xl shadow-2xl border-t-4 border-primary-orange-500 mb-12">
+        <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8">
+            
+            <div class="relative flex-shrink-0">
+                {% if profile_user.avatar %}
+                    <img src="{{ profile_user.avatar.url }}" alt="Аватарка {{ profile_user.full_name|default:profile_user.email }}" 
+                         class="w-32 h-32 rounded-full object-cover border-4 border-primary-orange-500 shadow-lg">
+                {% else %}
+                    <div class="w-32 h-32 rounded-full bg-primary-orange-100 flex items-center justify-center text-primary-orange-600 border-4 border-primary-orange-500 text-4xl shadow-lg">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="flex-grow text-center md:text-left">
+                <h1 class="text-4xl font-extrabold text-gray-900 mb-2">
+                    {{ profile_user.full_name|default:"Пользователь" }}
+                </h1>
+                <p class="text-xl text-gray-600 mb-4">
+                    <i class="fas fa-utensils text-primary-orange-500 mr-2"></i> Автор рецептов на ЕДА-HUCK
+                </p>
+                
+                {% comment %} Дополнительная информация о пользователе, если доступна и уместна для публики {% endcomment %}
+                <div class="space-y-1 text-gray-700 text-lg border-t pt-4 mt-4 hidden sm:block">
+                    <p>
+                        <i class="fas fa-calendar-alt w-5 mr-2 text-primary-orange-400"></i> 
+                        <strong class="font-medium">На сайте с:</strong> {{ profile_user.date_joined|date:"d M Y" }}
+                    </p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b-2 border-primary-orange-200 pb-3">
+            Рецепты от {{ profile_user.full_name|default:'этого пользователя' }} ({{ recipes.count }})
+        </h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for recipe in recipes %}
+            
+            {# Предполагается, что у модели Recipe есть поля 'cover_image' (для обложки) и 'description' или 'summary' #}
+            <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden border border-gray-100">
+                <a href="{% url 'recipe_detail' recipe.pk %}">
+                    {% if recipe.cover_image %}
+                        <img src="{{ recipe.cover_image.url }}" alt="Обложка {{ recipe.title }}" 
+                             class="w-full h-48 object-cover">
+                    {% else %}
+                        <div class="w-full h-48 bg-primary-orange-100 flex items-center justify-center text-primary-orange-500">
+                            <i class="fas fa-book-open text-4xl"></i>
+                        </div>
+                    {% endif %}
+                </a>
+                
+                <div class="p-5">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">
+                        <a href="{% url 'recipe_detail' recipe.pk %}" class="hover:text-primary-orange-600 transition">
+                            {{ recipe.title|default:"[Рецепт без названия]" }}
+                        </a>
+                    </h3>
+                    
+                    {# Краткое описание или первые 100 символов #}
+                    {% if recipe.summary %}
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+                            {{ recipe.summary }}
+                        </p>
+                    {% endif %}
+                    
+                    <div class="flex justify-between items-center text-sm text-gray-500 mt-3 border-t pt-3">
+                        <p>
+                            <i class="fas fa-star text-yellow-500 mr-1"></i> 
+                            {{ recipe.rating|default:'—' }}
+                        </p>
+                        <p>
+                            <i class="fas fa-calendar-alt mr-1"></i> 
+                            {{ recipe.created_at|date:"d M Y" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            
+            <div class="lg:col-span-3 col-span-1 p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                <p class="text-lg text-gray-600">
+                    <i class="fas fa-sad-tear mr-2"></i> Пользователь еще не опубликовал ни одного рецепта.
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
